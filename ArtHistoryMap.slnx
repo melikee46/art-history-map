@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArtHistoryMap.Domain/ArtHistoryMap.Domain.csproj" />
+    <Project Path="src/ArtHistoryMap.Infrastructure/ArtHistoryMap.Infrastructure.csproj" />
+  </Folder>
+</Solution>
