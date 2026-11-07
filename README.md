@@ -60,47 +60,6 @@ erDiagram
 * **`ArtistMovement`:** Sanatçının akım içerisindeki rolü (`Founder`, `KeyFigure`, `Pioneer`), aktif yılları ve birincil aidiyeti (`IsPrimary`).
 * **`Artwork`:** Eserin başlığı, yapım yılı, tekniği, sergilendiği müze ve sanatçı bağı.
 
----
-
-## Hızlı Başlangıç
-
-### 1. PostgreSQL Konteynerini Başlatın
-```bash
-docker run -d \
-  --name arthistory-postgres \
-  -e POSTGRES_DB=arthistory \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=<SIFRENIZ> \
-  -p 127.0.0.1:5432:5432 \
-  --restart unless-stopped \
-  postgres:16-alpine
-```
-
-### 2. Bağlantı Dizesini User-Secrets'a Ekleyin
-```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=arthistory;Username=postgres;Password=<SIFRENIZ>" \
-  --project src/ArtHistoryMap.Infrastructure
-```
-
-### 3. Veritabanını Güncelleyin (Migration & Seed Data)
-11 sanat akımı (Rönesans'tan Sürrealizm'e), 12 yönlü etkileşim bağı, 10 sanatçı ve 10 ikonik eser şemayla birlikte otomatik basılır:
-```bash
-dotnet ef database update \
-  --project src/ArtHistoryMap.Infrastructure \
-  --startup-project src/ArtHistoryMap.Infrastructure
-```
-
-### 4. Doğrulama
-```bash
-docker exec -it arthistory-postgres psql -U postgres -d arthistory -c "
-SELECT sm.\"Name\" AS \"Kaynak Akım\", r.\"RelationType\" AS \"İlişki\", tm.\"Name\" AS \"Hedef Akım\"
-FROM art_movement_relations r
-JOIN art_movements sm ON r.\"SourceMovementId\" = sm.\"Id\"
-JOIN art_movements tm ON r.\"TargetMovementId\" = tm.\"Id\"
-LIMIT 5;
-"
-```
 
 ---
 
