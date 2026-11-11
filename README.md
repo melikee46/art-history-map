@@ -69,10 +69,61 @@ erDiagram
   - [x] Yönlü graf kenar mimarisi ve Fluent API kısıtları
   - [x] Seed data (11 akım, 12 yönlü ilişki, sanatçılar, eserler)
   - [x] User-secrets entegrasyonu ve güvenlik denetimi
-- [ ] **Faz 2: Application & Web API Katmanı**
-  - [ ] Cytoscape/D3 uyumlu `GET /api/movements/graph` (`nodes` & `edges`) uç noktası
-  - [ ] Kronolojik zaman çizelgesi sorguları ve filtreleme servisleri
-  - [ ] Global exception middleware & FluentValidation
+- [x] **Faz 2: Application & Web API Katmanı**
+  - [x] Controller tabanlı ASP.NET Core 10 Web API (`ArtHistoryMap.Api`)
+  - [x] Cytoscape/D3 uyumlu `GET /api/movements/graph` — tüm düğümler ve yönlü kenarlar
+  - [x] Sayfalı listeler: hareketler (kronolojik), sanatçılar (ada göre), eserler (yıla göre)
+  - [x] Detay uç noktaları: `/api/movements/{id}`, `/api/artists/{id}`, `/api/artworks/{id}`
+  - [x] Entity'ler doğrudan kullanılmaz; DTO projeksiyonu + `AsNoTracking`
+  - [x] Global exception handler — stack trace istemciye asla sızdırılmaz
+  - [x] Rate limiting — dakikada IP başına 120 istek, aşımda `429 ProblemDetails`
+  - [x] CORS — tek origin (`Frontend:Origin`), yalnızca `GET`
+  - [x] OpenAPI — `/openapi/v1.json` (yalnızca Development ortamı)
+  - [x] Bağlantı dizesi `ConnectionStrings:DefaultConnection` (user-secrets) veya `ConnectionStrings__DefaultConnection` (ortam değişkeni)
 - [ ] **Faz 3: Etkileşimli Kullanıcı Arayüzü**
   - [ ] React tabanlı zaman çizelgesi kaydırıcısı (Timeline Slider)
   - [ ] Etkileşimli yönlü çizge ağ haritası
+
+---
+
+## API Uç Noktaları
+
+| Metod | Uç Nokta | Açıklama |
+|-------|----------|----------|
+| GET | `/api/movements` | Sayfalı kronolojik akım listesi |
+| GET | `/api/movements/graph` | Graf düğümleri ve yönlü kenarlar (D3/Cytoscape) |
+| GET | `/api/movements/{id}` | Akım detayı — sanatçılar, eserler, ilişkiler |
+| GET | `/api/movements/{id}/relations` | Bir akıma ait tüm yönlü ilişkiler |
+| GET | `/api/artists` | Sayfalı sanatçı listesi |
+| GET | `/api/artists/{id}` | Sanatçı detayı |
+| GET | `/api/artworks` | Sayfalı eser listesi |
+| GET | `/api/artworks/{id}` | Eser detayı |
+
+Sayfalama: `?page=1&pageSize=20` (maks. `pageSize=100`).
+
+---
+
+## Yerel Geliştirme Ortamı
+
+**Gereksinimler:** .NET 10 SDK, PostgreSQL 16 (Docker önerilen).
+
+```bash
+# 1. Bağlantı dizesi (bir kez, kendi terminalinde çalıştır)
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
+  "Host=localhost;Port=5432;Database=arthistory;Username=postgres;Password=<SIFRENIZ>" \
+  --project src/ArtHistoryMap.Api
+
+# 2. PostgreSQL — Docker ile
+docker run --name arthistory-postgres \
+  -e POSTGRES_PASSWORD=<SIFRENIZ> -e POSTGRES_DB=arthistory \
+  -p 5432:5432 -d postgres:16
+
+# 3. Migration uygula
+dotnet ef database update \
+  --project src/ArtHistoryMap.Infrastructure \
+  --startup-project src/ArtHistoryMap.Api
+
+# 4. API'yi başlat
+dotnet run --project src/ArtHistoryMap.Api
+# OpenAPI şeması: http://localhost:<PORT>/openapi/v1.json
+```
